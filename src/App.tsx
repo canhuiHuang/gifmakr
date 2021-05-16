@@ -66,7 +66,7 @@ function App() {
     ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
 
     // Run the FFMpeg command
-    await ffmpeg.run('-ss', start.toString(), '-t', (end - start).toString(), '-i', 'video.mp4', '-vf', `fps=${fps},scale=w=${scale}*iw:h=${scale}*ih:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`, 'out.gif');
+    await ffmpeg.run('-ss', start.toString(), '-i', 'video.mp4', '-t', (end - start).toString(), '-vf', `fps=${fps},scale=w=${scale}*iw:h=${scale}*ih:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`, 'out.gif');
      
     // Read the result
     const data = ffmpeg.FS('readFile','out.gif');
@@ -80,7 +80,7 @@ function App() {
     ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
 
     // Run the FFMpeg command
-    await ffmpeg.run('-ss', start.toString(), '-t', (end - start).toString(), '-i', 'video.mp4', '-f', 'gif', 'out.gif');
+    await ffmpeg.run('-ss', start.toString(), '-i', 'video.mp4', '-t', (end - start).toString(), '-f', 'gif', 'out.gif');
      
     // Read the result
     const data = ffmpeg.FS('readFile','out.gif');
@@ -94,7 +94,7 @@ function App() {
     ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
 
     // Run the FFMpeg command
-    await ffmpeg.run('-ss', start.toString(), '-t', (end - start).toString(), '-i', 'video.mp4', '-f', 'mp4', 'out.mp4');
+    await ffmpeg.run('-ss', start.toString(), '-i', 'video.mp4', '-t', (end - start).toString(),  '-c', 'copy', 'out.mp4');
      
     // Read the result
     const data = ffmpeg.FS('readFile','out.mp4');
@@ -119,9 +119,9 @@ function App() {
     console.log('percentage: ', currentPercentage, 'seconds played: ');
   }
   const onSeekCallback = e => {
-    if(zKeyPress) setStart(e);
-    else if(cKeyPress) setEnd(e);
-    else setCurrentSeconds(e);
+    if(zKeyPress && e < end) setStart(e);
+    else if(cKeyPress && e > start) setEnd(e);
+    else if (!zKeyPress && !cKeyPress) setCurrentSeconds(e);
   }
   const handleSeekChange = e => {
     console.log('handling seek change: ' ,e.target.value, e.target, e);
@@ -156,10 +156,10 @@ function App() {
   return ready? (
     <div className="App">
       {video && <VideoPlayer url={URL.createObjectURL(video)} takeThumbnail={takeThumbnail} onReadyCallBack={onReadyCallBack} onSeekCallback={onSeekCallback} />}
-      <div className="startEnd_inputs">
+      {video && <div className="startEnd_inputs">
         <input className="numberStart" value={start} type="number" min="0" max={end - 0.0001} onChange={handleStartChange}/>
         <input className="numberEnd" value={end} type="number" min={start + 0.0001} max={duration} onChange={handleEndChange}/>
-      </div>
+      </div>}
       {video && <div className="timeline" >
         <input  className="onSeekBar" style={{
             height: '8vh',
@@ -183,24 +183,26 @@ function App() {
       <input type="file" className="btn" onChange={e=> {
         setVideo(e.target.files?.item(0));
       }} />
+      {video && <div className="panel">
+        <label htmlFor="scale">Scale</label>
+        <input type="range" id="scale" min={0.1} max={1} step='any' defaultValue={0.5} onChange={handleScaleChange}/>
+        <label htmlFor="fps">Fps</label>
+        <input className="fps_input" id='fps' defaultValue={24} type="number" min={10} max={144} onChange={handleFpsChange}/>
+        <button className="btn" onClick={convertTomp4}>Convert</button>
+        <button className="btn" onClick={quickConvertToGif}>Quick Convert</button>
+        {gif && <div>
+          <img src={gif} width="512"></img>
+          <a href={gif} target='_blank' download='yourGif.gif'>download</a>
+          </div>}
+        {mp4 && <video
+                controls
+                width='250'
+                src={mp4}
+              >
+              </video>}
+      </div> }
       
-      <h3>Result</h3>
-      <label htmlFor="scale">Scale</label>
-      <input type="range" id="scale" min={0.1} max={1} step='any' defaultValue={0.5} onChange={handleScaleChange}/>
-      <label htmlFor="fps">Fps</label>
-      <input className="fps_input" id='fps' defaultValue={24} type="number" min={10} max={144} onChange={handleFpsChange}/>
-      <button className="btn" onClick={convertTomp4}>Convert</button>
-      <button className="btn" onClick={quickConvertToGif}>Quick Convert</button>
-      {gif && <div>
-        <img src={gif} width="512"></img>
-        <a href={gif} target='_blank' download='yourGif.gif'>download</a>
-        </div>}
-      {mp4 && <video
-              controls
-              width='250'
-              src={mp4}
-            >
-            </video>}
+      
       
     </div>
   ) : 

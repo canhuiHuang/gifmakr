@@ -1,7 +1,14 @@
-
+* {
+  box-sizing: border-box;
+}
 
 .App {
+  height: 100vh;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 .App code {
   background: #FFF3;
@@ -117,4 +124,12 @@ body {
 }
 .numberStart, .numberEnd{
   width: 3vw;
+}
+
+.btn {
+  border-radius: 15px;
+  border: none;
+  padding: 1.9rem 1.8rem;
+  margin: 2rem;
+  background-color: #04AA6D;
 }
