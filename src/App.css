@@ -1,3 +1,5 @@
+
+
 .App {
   text-align: center;
 }
@@ -42,4 +44,77 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.player-wrapper {
+  width: 52vw !important;
+  height: auto !important;
+}
+
+.timeline {
+  position: relative;
+  width: 52vw;
+  margin-top: 2.4rem;
+}
+.onSeekBar {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 25px;
+  outline: none;
+  opacity: 1;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.onSeekBar:hover {
+  opacity: 0.99;
+}
+
+.onSeekBar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 3px;
+  height: 8vh;
+  background: #6177f0;
+  cursor: pointer;
+}
+.onSeekBar.start {
+  z-index: -5 !important;
+  height: 15vh;
+}
+.onSeekBar::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  background: #04AA6D;
+  cursor: pointer;
+}
+
+.start, .end{
+  position: absolute;
+  height: 9vh;
+  width: 3px;
+  border-radius: 2px;
+}
+.selected {
+  border: solid 2px rgba(247, 242, 242, 0.8);
+}
+
+.start{
+  background-color: rgb(243, 186, 81);
+}
+.end {
+    background-color: rgb(221, 151, 21);
+}
+
+body {
+  background-color: #1b1925;
+}
+
+.startEnd_inputs{
+  display: flex;
+  justify-content: space-between;
+  width: 52.5vw;
+}
+.numberStart, .numberEnd{
+  width: 3vw;
 }
