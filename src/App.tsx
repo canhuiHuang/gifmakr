@@ -285,7 +285,7 @@ function App() {
         <button className="btn" onClick={(convertToGif)}>Convert</button>
         <div className="sub-btns">
           <button className="btn quick-convert" onClick={quickConvertToGif}>Quick Convert</button>
-          <button className="btn mp4-convert" onClick={(convertTomp4)}>Convert to mp4 <i className="fas fa-exclamation-circle"></i></button>
+          <button className="btn mp4-convert" onClick={(convertTomp4)}>Cut (mp4) <i className="fas fa-exclamation-circle"></i></button>
         </div>
         {issue && <p className="error">Something went wrong.</p>}
         {loading && !gif && !mp4 && <div className='result'>
