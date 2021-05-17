@@ -28,6 +28,7 @@ function App() {
   const [start, setStart] = useState<number>(0);
   const [end, setEnd] = useState<number>(0);
   const [scale, setScale] = useState<number>(0.5);
+  const [video_name, setVideo_name] = useState<string>('your');
   // const [fps, setFps] = useState<number>(24);
   // const [useCustomFps, setUseCustomFps] = useState<boolean>(false);
 
@@ -258,9 +259,8 @@ function App() {
           fileInput_mode? <label className="file">
           <input type="file" id="file" className="btn" onChange={e=> {
             setPrevVideo(video);
+            setVideo_name(e.target.files?.item(0).name);
             setUrl(e.target.files?.item(0));
-            console.log(e.target.files?.item(0))
-            console.log(URL.createObjectURL(e.target.files?.item(0)))
             setVideo(URL.createObjectURL(e.target.files?.item(0)));
             }} /> 
           <span className="file-custom" data-after-content={url? url.name : "Choose file..."}></span>
@@ -300,7 +300,7 @@ function App() {
               <div className="ring-1"></div>
           </div> : <div className='contenido'>
             <img src={gif} width="256"></img>
-            <a href={gif} target='_blank' download='yourGif.gif'>Download</a>
+            <a href={gif} target='_blank' download={`${video_name}.gif`}>Download</a>
           </div>
           }
           </div>}
@@ -315,7 +315,7 @@ function App() {
               src={mp4}
             >
             </video>
-            <a href={mp4} target='_blank' download='yourmp4.mp4'> Download</a>
+            <a href={mp4} target='_blank' download={`${video_name}.mp4`}> Download</a>
           </div>
           }
         </div>}
@@ -329,7 +329,7 @@ function App() {
   <div className="line"></div>
 </div>)}
   <Help video={video} />
-  <footer id="footer">CutToGif v1.0a &copy; made by Boku Dev.</footer>
+  <footer id="footer">Cut2Gif v1.0a &copy; made by Boku Dev.</footer>
 </div>
   
 }
