@@ -4,16 +4,23 @@ import useKeyPress from './useKeyPress';
 import './App.css';
 //import VideoPlayer from './videoPlayer/VideoPlayer';
 import VideoPlayer from './VideoPlayer';
+import Help from './Help';
 
 const ffmpeg = createFFmpeg({log:true});
 
 function App() {
+  const [darkMode, setDarkMode] = useState<boolean>(false);
   const [ready, setReady] = useState<boolean>(false);
+  const [url, setUrl] = useState<any>();
   const [video, setVideo] = useState<any>();
+  const [prevVideo, setPrevVideo] = useState<any>();
+  const [fileInput_mode, setFileInput_mode] = useState<boolean>(true);
   const [gif, setGif] = useState<any>();
   const [png, setPng] = useState<any>();
   const [mp4, setmp4] = useState<any>();
-  const [timeLine_urls, setTimelineUrls] = useState<any[]>();
+  const [loading, setLoading] = useState<boolean>(false);
+  const [issue, setIssue] = useState<boolean>(false);
+  const [newVideoToggle, setNewVideoToggle] = useState<boolean>(false);
 
   const [duration, setDuration] = useState<any>(0);
   const [currentSeconds, setCurrentSeconds] = useState<any>(0);
@@ -21,9 +28,10 @@ function App() {
   const [start, setStart] = useState<number>(0);
   const [end, setEnd] = useState<number>(0);
   const [scale, setScale] = useState<number>(0.5);
-  const [fps, setFps] = useState<number>(24);
+  // const [fps, setFps] = useState<number>(24);
+  // const [useCustomFps, setUseCustomFps] = useState<boolean>(false);
 
-  const [currentKey, setCurrentKey] = useState<string>('');
+  const [currentKey, setCurrentKey] = useState<string>('x');
   const zKeyPress = useKeyPress('z');
   const cKeyPress = useKeyPress('c');
 
@@ -39,19 +47,28 @@ function App() {
       setCurrentKey('x');
     } else if (key === 'c') {
       setCurrentKey('c');
-    } 
+    }
   }
 
   useEffect(()=>{
+    if (typeof(Storage) !== "undefined") {
+      if (localStorage.getItem("darkMode")){
+        if (localStorage.getItem("darkMode") === 'true')
+          setDarkMode(true);
+        else setDarkMode(false);
+      }
+    }
+
     load();
     window.addEventListener('keydown', downHandler);
   },[])
-  const takeThumbnail = async () => {
+
+  const takeThumbnail = async (duration) => {
     // Write the file to memory
     ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
 
-    let offset = duration/14;
-    await ffmpeg.run('-i', 'video.mp4', '-ss', '3.0', '-frames:v', '1', 'out.jpg');
+    console.log('thumbnail ss: ', duration*0.1);
+    await ffmpeg.run('-i', 'video.mp4', '-ss', (duration*0.05).toString(), '-frames:v', '1', 'out.jpg');
 
     // Read the result
     const data = ffmpeg.FS('readFile','out.jpg');
@@ -62,53 +79,97 @@ function App() {
   }
 
   const convertToGif = async () => {
-    // Write the file to memory
-    ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
+    try {
+      // Write the file to memory
+      setLoading(true);
+      ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
 
-    // Run the FFMpeg command
-    await ffmpeg.run('-ss', start.toString(), '-i', 'video.mp4', '-t', (end - start).toString(), '-vf', `fps=${fps},scale=w=${scale}*iw:h=${scale}*ih:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`, 'out.gif');
-     
-    // Read the result
-    const data = ffmpeg.FS('readFile','out.gif');
+      // Run the FFMpeg command
+      // if (useCustomFps){
+      //   console.log('custom fps', fps);
+      //   await ffmpeg.run('-ss', start.toString(), '-t', (end - start).toString(), '-i', 'video.mp4', '-vf', `fps=${fps},scale=w=${scale}*iw:h=${scale}*ih:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`, 'out.gif');
+      // }
+      // else {
+        await ffmpeg.run('-ss', start.toString(), '-t', (end - start).toString(), '-i', 'video.mp4', '-vf', `fps=30,scale=w=${scale}*iw:h=${scale}*ih:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`, 'out.gif');
+      
+      // Read the result
+      const data = ffmpeg.FS('readFile','out.gif');
 
-    // Create a URL
-    const url = URL.createObjectURL(new Blob([data.buffer],{type: 'image/gif'}));
-    setGif(url)
+      // Create a URL
+      const url = URL.createObjectURL(new Blob([data.buffer],{type: 'image/gif'}));
+      setGif(url);
+      setmp4(undefined);
+      setLoading(false);
+    } catch (error) {
+      console.error('Report this. Error: ',error);
+      setIssue(true);
+      setTimeout(()=>{
+        setIssue(false);
+      },3200)
+      setLoading(false);
+    }
   }
   const quickConvertToGif = async () => {
-    // Write the file to memory
-    ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
+    try {
+      setLoading(true);
+      // Write the file to memory
+      ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
 
-    // Run the FFMpeg command
-    await ffmpeg.run('-ss', start.toString(), '-i', 'video.mp4', '-t', (end - start).toString(), '-f', 'gif', 'out.gif');
-     
-    // Read the result
-    const data = ffmpeg.FS('readFile','out.gif');
+      // Run the FFMpeg command
+      await ffmpeg.run('-ss', start.toString(), '-i', 'video.mp4', '-t', (end - start).toString(), '-vf', `fps=30`, '-f', 'gif', 'out.gif');
+      
+      // Read the result
+      const data = ffmpeg.FS('readFile','out.gif');
 
-    // Create a URL
-    const url = URL.createObjectURL(new Blob([data.buffer],{type: 'image/gif'}));
-    setGif(url)
+      // Create a URL
+      const url = URL.createObjectURL(new Blob([data.buffer],{type: 'image/gif'}));
+      setGif(url)
+      setmp4(undefined);
+      setLoading(false);
+    } catch (error) {
+      console.error('Report this. Error: ',error);
+      setIssue(true);
+      setTimeout(()=>{
+        setIssue(false);
+      },3200)
+      setLoading(false);
+    }
   }
   const convertTomp4 = async () => {
-    // Write the file to memory
-    ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
+    try {
+      setLoading(true);
+      // Write the file to memory
+      ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
 
-    // Run the FFMpeg command
-    await ffmpeg.run('-ss', start.toString(), '-i', 'video.mp4', '-t', (end - start).toString(),  '-c', 'copy', 'out.mp4');
-     
-    // Read the result
-    const data = ffmpeg.FS('readFile','out.mp4');
+      // Run the FFMpeg command
+      await ffmpeg.run('-ss', start.toString(), '-i', 'video.mp4', '-t', (end - start).toString(),  '-c', 'copy', 'out.mp4');
+      
+      // Read the result
+      const data = ffmpeg.FS('readFile','out.mp4');
 
-    // Create a URL
-    const url = URL.createObjectURL(new Blob([data.buffer],{type: 'video/mp4'}));
-    setmp4(url)
+      // Create a URL
+      const url = URL.createObjectURL(new Blob([data.buffer],{type: 'video/mp4'}));
+      setmp4(url)
+      setGif(undefined);
+      setLoading(false);
+    } catch (error) {
+      console.error('Report this. Error: ',error);
+      setIssue(true);
+      setTimeout(()=>{
+        setIssue(false);
+      },3200)
+      setLoading(false);
+    }
   }
   const onReadyCallBack = (e) => {
     console.log('onReady', e.getDuration());
+
     setDuration(e.getDuration());
-    if(!png){
-      takeThumbnail();
-      setEnd(e.getDuration());
+    if(prevVideo !== video){
+      takeThumbnail(e.getDuration());
+      setStart(0.15*e.getDuration())
+      setEnd(0.2*e.getDuration());
+      setPrevVideo(video);
     }
   }
   const onProgressCallBack = (e) => {
@@ -116,7 +177,6 @@ function App() {
     
     setCurrentSeconds(playedSeconds);
     setCurrentPercentage(played);
-    console.log('percentage: ', currentPercentage, 'seconds played: ');
   }
   const onSeekCallback = e => {
     if(zKeyPress && e < end) setStart(e);
@@ -134,7 +194,7 @@ function App() {
         if(e.target.value > start) setEnd(parseFloat(e.target.value))
         break;
       case 'x':
-        setCurrentSeconds(parseFloat(e.target.value))
+        setCurrentSeconds(parseFloat(e.target.value));
         break;
       default:
         break;
@@ -146,16 +206,31 @@ function App() {
   const handleEndChange = e => {
     setEnd(parseFloat(e.target.value))
   }
-  const handleFpsChange = e => {
-    setFps(parseFloat(e.target.value))
-  }
+  // const handleFpsChange = e => {
+  //   setFps(parseFloat(e.target.value))
+  //   console.log(fps);
+  // }
   const handleScaleChange = e => {
     setScale(parseFloat(e.target.value))
   }
+  const handleDarkMode_switch = e => {
+    setDarkMode(!darkMode);
+    if (typeof(Storage) !== "undefined") {
+      darkMode? localStorage.setItem('darkMode', 'false') : localStorage.setItem('darkMode', 'true')
+    }
+  }
 
-  return ready? (
-    <div className="App">
-      {video && <VideoPlayer url={URL.createObjectURL(video)} takeThumbnail={takeThumbnail} onReadyCallBack={onReadyCallBack} onSeekCallback={onSeekCallback} />}
+  return <div className={`whole ${darkMode? 'darkmode' : ''}`}>
+    <div className="button b2" id="button-11">
+      <input type="checkbox" className="checkbox" checked={darkMode} onChange={handleDarkMode_switch}/>
+      <div className="knobs"><span></span></div>
+      <div className="layer"></div>
+    </div>
+    {ready? (
+    <div className="App" style={video? {marginTop: '1rem'} : 
+    {}}>
+      {<h1>Convert or cut your video into a Gif</h1>}
+      {video && <VideoPlayer newVideoToggle={newVideoToggle} url={video} onProgressCallBack={onProgressCallBack} onReadyCallBack={onReadyCallBack} onSeekCallback={onSeekCallback} />}
       {video && <div className="startEnd_inputs">
         <input className="numberStart" value={start} type="number" min="0" max={end - 0.0001} onChange={handleStartChange}/>
         <input className="numberEnd" value={end} type="number" min={start + 0.0001} max={duration} onChange={handleEndChange}/>
@@ -177,36 +252,86 @@ function App() {
         <div onClick={()=> setCurrentKey('c')} className={`end ${currentKey=== 'c'? 'selected' : ''}`} style={{
           transform: `translateY(-9vh) translateX(${(end/duration)*52}vw)`,
         }}></div>
-
-        
       </div>}
-      <input type="file" className="btn" onChange={e=> {
-        setVideo(e.target.files?.item(0));
-      }} />
+      <div className="video_input">
+        {
+          fileInput_mode? <label className="file">
+          <input type="file" id="file" className="btn" onChange={e=> {
+            setPrevVideo(video);
+            setUrl(e.target.files?.item(0));
+            console.log(e.target.files?.item(0))
+            console.log(URL.createObjectURL(e.target.files?.item(0)))
+            setVideo(URL.createObjectURL(e.target.files?.item(0)));
+            }} /> 
+          <span className="file-custom" data-after-content={url? url.name : "Choose file..."}></span>
+        </label> : 
+          <input type="url" id="file" className="btn"/>
+        }
+        <button disabled onClick={() => setFileInput_mode(!fileInput_mode)} className="file_input_toggle">{fileInput_mode? <i className="far fa-file-video"></i> : <i className="fas fa-link"></i>}</button>
+      </div>
+      
       {video && <div className="panel">
-        <label htmlFor="scale">Scale</label>
-        <input type="range" id="scale" min={0.1} max={1} step='any' defaultValue={0.5} onChange={handleScaleChange}/>
-        <label htmlFor="fps">Fps</label>
-        <input className="fps_input" id='fps' defaultValue={24} type="number" min={10} max={144} onChange={handleFpsChange}/>
-        <button className="btn" onClick={convertTomp4}>Convert</button>
-        <button className="btn" onClick={quickConvertToGif}>Quick Convert</button>
-        {gif && <div>
-          <img src={gif} width="512"></img>
-          <a href={gif} target='_blank' download='yourGif.gif'>download</a>
+        <div className="options">
+          <div className="scale">
+            <label htmlFor="scale">Scale: {Math.round(scale*100)}% </label>
+            <input type="range" id="scale" min={0.1} max={1} step='any' defaultValue={0.5} onChange={handleScaleChange}/>
+          </div>
+          {/* <div className="fps-container">
+            <input type="checkbox" onChange={()=>setUseCustomFps(!useCustomFps)}/>
+            <label htmlFor="fps">Custom Fps </label>
+            <input disabled={!useCustomFps} className="fps_input" id='fps' defaultValue={24} type="number" min={10} max={144} onChange={handleFpsChange}/>
+          </div> */}
+        </div>
+        <button className="btn" onClick={(convertToGif)}>Convert</button>
+        <div className="sub-btns">
+          <button className="btn quick-convert" onClick={quickConvertToGif}>Quick Convert</button>
+          <button className="btn mp4-convert" onClick={(convertTomp4)}>Convert to mp4 <i className="fas fa-exclamation-circle"></i></button>
+        </div>
+        {issue && <p className="error">Something went wrong.</p>}
+        {loading && !gif && !mp4 && <div className='result'>
+            <div className="load-4">
+              <p>Converting</p>
+              <div className="ring-1"></div>
+          </div>
+        </div>}
+        {gif && <div className='result'>
+          {loading? <div className="load-4">
+              <p>Converting</p>
+              <div className="ring-1"></div>
+          </div> : <div className='contenido'>
+            <img src={gif} width="256"></img>
+            <a href={gif} target='_blank' download='yourGif.gif'>Download</a>
+          </div>
+          }
           </div>}
-        {mp4 && <video
-                controls
-                width='250'
-                src={mp4}
-              >
-              </video>}
+        {mp4 && <div className='result'>
+          {loading? <div className="load-4">
+              <p>Converting</p>
+              <div className="ring-1"></div>
+          </div> : <div className='contenido'>
+            <video
+              autoPlay
+              width='256'
+              src={mp4}
+            >
+            </video>
+            <a href={mp4} target='_blank' download='yourmp4.mp4'> Download</a>
+          </div>
+          }
+        </div>}
       </div> }
-      
-      
-      
+
     </div>
   ) : 
-  (<p>Loading...</p>)
+  (<div className="load-2">
+  <div className="line"></div>
+  <div className="line"></div>
+  <div className="line"></div>
+</div>)}
+  <Help video={video} />
+  <footer id="footer">CutToGif v1.0a &copy; made by Boku Dev.</footer>
+</div>
+  
 }
 
 export default App;
