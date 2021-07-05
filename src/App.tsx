@@ -20,7 +20,7 @@ function App() {
   const [png, setPng] = useState<any>();
   const [mp4, setmp4] = useState<any>();
   const [loading, setLoading] = useState<boolean>(false);
-  const [issue, setIssue] = useState<boolean>(false);
+  const [issue, setIssue] = useState<String>('');
   const [newVideoToggle, setNewVideoToggle] = useState<boolean>(false);
 
   const [duration, setDuration] = useState<any>(0);
@@ -66,6 +66,10 @@ function App() {
     window.addEventListener('keydown', downHandler);
   },[])
 
+  const isEndGreaterthanStart = () => {
+    return end > start;
+  }
+
   const takeThumbnail = async (duration) => {
     // Write the file to memory
     ffmpeg_thumbnail.FS('writeFile', 'video.mp4', await fetchFile(video));
@@ -82,86 +86,107 @@ function App() {
   }
 
   const convertToGif = async () => {
-    try {
-      // Write the file to memory
-      setLoading(true);
-      ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
+    if (end > start){
+      try {
+        // Write the file to memory
+        setLoading(true);
+        ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
 
-      // Run the FFMpeg command
-      // if (useCustomFps){
-      //   console.log('custom fps', fps);
-      //   await ffmpeg.run('-ss', start.toString(), '-t', (end - start).toString(), '-i', 'video.mp4', '-vf', `fps=${fps},scale=w=${scale}*iw:h=${scale}*ih:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`, 'out.gif');
-      // }
-      // else {
-        await ffmpeg.run('-ss', start.toString(), '-t', (end - start).toString(), '-i', 'video.mp4', '-vf', `fps=30,scale=w=${scale}*iw:h=${scale}*ih:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`, 'out.gif');
-      
-      // Read the result
-      const data = ffmpeg.FS('readFile','out.gif');
+        // Run the FFMpeg command
+        // if (useCustomFps){
+        //   console.log('custom fps', fps);
+        //   await ffmpeg.run('-ss', start.toString(), '-t', (end - start).toString(), '-i', 'video.mp4', '-vf', `fps=${fps},scale=w=${scale}*iw:h=${scale}*ih:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`, 'out.gif');
+        // }
+        // else {
+          await ffmpeg.run('-ss', start.toString(), '-t', (end - start).toString(), '-i', 'video.mp4', '-vf', `fps=30,scale=w=${scale}*iw:h=${scale}*ih:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`, 'out.gif');
+        
+        // Read the result
+        const data = ffmpeg.FS('readFile','out.gif');
 
-      // Create a URL
-      const url = URL.createObjectURL(new Blob([data.buffer],{type: 'image/gif'}));
-      setGif(url);
-      setmp4(undefined);
-      setLoading(false);
-    } catch (error) {
-      console.error('Report this. Error: ',error);
-      setIssue(true);
-      setTimeout(()=>{
-        setIssue(false);
-      },3200)
-      setLoading(false);
+        // Create a URL
+        const url = URL.createObjectURL(new Blob([data.buffer],{type: 'image/gif'}));
+        setGif(url);
+        setmp4(undefined);
+        setLoading(false);
+      } catch (error) {
+        console.error('Report this. Error: ',error);
+        setIssue('Something went wrong');
+        setTimeout(()=>{
+          setIssue('');
+        },3200)
+        setLoading(false);
+      }
+    } else {
+      setIssue('End frames must be greater than Start frames');
+        setTimeout(()=>{
+          setIssue('');
+        },3200)
     }
   }
   const quickConvertToGif = async () => {
-    try {
-      setLoading(true);
-      // Write the file to memory
-      ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
+    if (end > start){
+      try {
+        setLoading(true);
+        // Write the file to memory
+        ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
 
-      // Run the FFMpeg command
-      await ffmpeg.run('-ss', start.toString(), '-i', 'video.mp4', '-t', (end - start).toString(), '-vf', `fps=30`, '-f', 'gif', 'out.gif');
-      
-      // Read the result
-      const data = ffmpeg.FS('readFile','out.gif');
+        // Run the FFMpeg command
+        await ffmpeg.run('-ss', start.toString(), '-i', 'video.mp4', '-t', (end - start).toString(), '-vf', `fps=30`, '-f', 'gif', 'out.gif');
+        
+        // Read the result
+        const data = ffmpeg.FS('readFile','out.gif');
 
-      // Create a URL
-      const url = URL.createObjectURL(new Blob([data.buffer],{type: 'image/gif'}));
-      setGif(url)
-      setmp4(undefined);
-      setLoading(false);
-    } catch (error) {
-      console.error('Report this. Error: ',error);
-      setIssue(true);
-      setTimeout(()=>{
-        setIssue(false);
-      },3200)
-      setLoading(false);
+        // Create a URL
+        const url = URL.createObjectURL(new Blob([data.buffer],{type: 'image/gif'}));
+        setGif(url)
+        setmp4(undefined);
+        setLoading(false);
+      } catch (error) {
+        console.error('Report this. Error: ',error);
+        setIssue('Something went wrong');
+        setTimeout(()=>{
+          setIssue('');
+        },3200)
+        setLoading(false);
+      }
+    } else {
+      setIssue('End frames must be greater than Start frames');
+        setTimeout(()=>{
+          setIssue('');
+        },3200)
     }
   }
   const convertTomp4 = async () => {
-    try {
-      setLoading(true);
-      // Write the file to memory
-      ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
+    if (end > start){
+      try {
+        setLoading(true);
+        // Write the file to memory
+        ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
 
-      // Run the FFMpeg command
-      await ffmpeg.run('-ss', start.toString(), '-i', 'video.mp4', '-t', (end - start).toString(),  '-c', 'copy', 'out.mp4');
-      
-      // Read the result
-      const data = ffmpeg.FS('readFile','out.mp4');
+        // Run the FFMpeg command
+        await ffmpeg.run('-ss', start.toString(), '-i', 'video.mp4', '-t', (end - start).toString(),  '-c', 'copy', 'out.mp4');
+        
+        // Read the result
+        const data = ffmpeg.FS('readFile','out.mp4');
 
-      // Create a URL
-      const url = URL.createObjectURL(new Blob([data.buffer],{type: 'video/mp4'}));
-      setmp4(url)
-      setGif(undefined);
-      setLoading(false);
-    } catch (error) {
-      console.error('Report this. Error: ',error);
-      setIssue(true);
-      setTimeout(()=>{
-        setIssue(false);
-      },3200)
-      setLoading(false);
+        // Create a URL
+        const url = URL.createObjectURL(new Blob([data.buffer],{type: 'video/mp4'}));
+        setmp4(url)
+        setGif(undefined);
+        setLoading(false);
+      } catch (error) {
+        console.error('Report this. Error: ',error);
+        setIssue('Something went wrong');
+        setTimeout(()=>{
+          setIssue('');
+        },3200)
+        setLoading(false);
+      }
+    } else {
+      setIssue('End frames must be greater than Start frames');
+        setTimeout(()=>{
+          setIssue('');
+        },3200)
     }
   }
   const onReadyCallBack = (e) => {
@@ -289,7 +314,7 @@ function App() {
           <button className="btn quick-convert" onClick={quickConvertToGif}>Quick Convert</button>
           <button className="btn mp4-convert" onClick={(convertTomp4)}>Cut (mp4) <i className="fas fa-exclamation-circle"></i></button>
         </div>
-        {issue && <p className="error">Something went wrong.</p>}
+        {issue !== '' && <p className="error">{issue}</p>}
         {loading && !gif && !mp4 && <div className='result'>
             <div className="load-4">
               <p>Converting</p>
