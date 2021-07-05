@@ -7,6 +7,7 @@ import VideoPlayer from './VideoPlayer';
 import Help from './Help';
 
 const ffmpeg = createFFmpeg({log:true});
+const ffmpeg_thumbnail = createFFmpeg({log:false});
 
 function App() {
   const [darkMode, setDarkMode] = useState<boolean>(false);
@@ -38,6 +39,7 @@ function App() {
 
   const load = async () => {
     await ffmpeg.load();
+    await ffmpeg_thumbnail.load();
     setReady(true);
   }
 
@@ -66,13 +68,13 @@ function App() {
 
   const takeThumbnail = async (duration) => {
     // Write the file to memory
-    ffmpeg.FS('writeFile', 'video.mp4', await fetchFile(video));
+    ffmpeg_thumbnail.FS('writeFile', 'video.mp4', await fetchFile(video));
 
     console.log('thumbnail ss: ', duration*0.1);
-    await ffmpeg.run('-i', 'video.mp4', '-ss', (duration*0.05).toString(), '-frames:v', '1', 'out.jpg');
+    await ffmpeg_thumbnail.run('-i', 'video.mp4', '-ss', (duration*0.05).toString(), '-frames:v', '1', 'out.jpg');
 
     // Read the result
-    const data = ffmpeg.FS('readFile','out.jpg');
+    const data = ffmpeg_thumbnail.FS('readFile','out.jpg');
 
     // Create a URL
     const url = URL.createObjectURL(new Blob([data.buffer],{type: 'image/jpg'}));
@@ -329,7 +331,7 @@ function App() {
   <div className="line"></div>
 </div>)}
   <Help video={video} />
-  <footer id="footer">Cut2Gif v1.0a &copy; made by Boku Dev.</footer>
+  <footer id="footer">Cut2Gif v1.0b &copy; made by Boku Dev.</footer>
 </div>
   
 }

@@ -6,7 +6,7 @@ function Help({video}) {
     return (
         <div className={`help-button-wrapper ${expanded? 'expanded' : ''}`} style={video?{alignSelf: 'flex-end'} : {alignSelf: 'center',marginTop: '-2rem'}}>
             <ul className="help-list">
-                <li><img id="instructionGif" width='420' src="https://media.giphy.com/media/KmNvcE5x6gFbf3CUZx/giphy.gif" alt="" />
+                <li><img id="instructionGif" width='420' src="https://media.giphy.com/media/KmNvcE5x6gFbf3CUZx/giphy.gif" alt="" style={{pointerEvents: 'none'}} />
                 </li>
                 <li className="instructions">Use the bars to select part of the video to cut.</li>
                 <li className="instructions" >You can also use the Keys 'Z' & 'C'.</li>
