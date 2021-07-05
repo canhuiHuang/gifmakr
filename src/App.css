@@ -1006,6 +1006,7 @@ input[type=range]#scale:focus::-ms-fill-upper  {
 }
 
 .help-button-wrapper {
+  pointer-events: none;
   position: relative;
   align-self: flex-end;
   justify-self: flex-end;
@@ -1017,6 +1018,7 @@ input[type=range]#scale:focus::-ms-fill-upper  {
 }
 
 .help-button {
+  pointer-events:initial;
   height: 4em;
   width: 4em;
   font-size: 14px;
