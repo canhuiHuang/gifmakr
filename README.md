@@ -2,6 +2,8 @@
 
 ✨ cut2gif created with React. By Canhui Huang
 
+<img src="https://media.giphy.com/media/KmNvcE5x6gFbf3CUZx/giphy.gif" alt="" />
+
 ## Live: https://cut2gif.netlify.app/
 <br>
 
